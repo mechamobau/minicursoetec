@@ -2,10 +2,8 @@ import React, { Component } from 'react';
 
 import { View } from 'react-native';
 
-// import { Container } from './styles';
-
 export default class Login extends Component {
-    render() {
+    render = () => {
         return <View />;
     }
 }

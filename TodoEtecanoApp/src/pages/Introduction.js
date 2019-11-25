@@ -53,7 +53,7 @@ export default class Introduction extends Component {
         </View>
     )
 
-    render() {
+    render = () => {
         const { classes, title } = this.state;
 
         return (
