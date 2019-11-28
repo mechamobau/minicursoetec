@@ -16,6 +16,15 @@
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route')
 
-Route.get('/', () => {
-  return { greeting: 'Hello world in JSON' }
-})
+Route.get('/', 'HomeController.index');
+
+Route.group(() => {
+
+    Route
+        .resource('todos', 'TodoController')
+        .apiOnly();
+
+    Route.get('todos/completed', 'TodoController.completed')
+        .as('todos.completed');
+
+}).prefix('api/v1')
