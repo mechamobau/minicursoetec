@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import { View, Text, StyleSheet, StatusBar, FlatList, TouchableOpacity } from 'react-native';
+import Button from '../components/Button';
 
 const styles = StyleSheet.create({
     container: {
@@ -28,18 +29,6 @@ const styles = StyleSheet.create({
         borderBottomColor: 'rgba(0,0,0,0.1)',
         paddingVertical: 10
     },
-    button: {
-        width: '100%',
-        backgroundColor: '#B12D30',
-        padding: 10,
-        borderRadius: 8
-    },
-    buttonText: {
-        fontSize: 25,
-        color: '#FFF',
-        textAlign: "center",
-        fontWeight: "bold"
-    }
 });
 
 export default class Introduction extends Component {
@@ -92,9 +81,9 @@ export default class Introduction extends Component {
                     contentContainerStyle={{ paddingBottom: 50 }}
                 />
 
-                <TouchableOpacity style={styles.button} onPress={this.goToInit}>
-                    <Text style={styles.buttonText}>Iniciar</Text>
-                </TouchableOpacity>
+                <Button onPress={this.goToInit}>
+                    Iniciar
+                </Button>
             </View>
         );
     }
