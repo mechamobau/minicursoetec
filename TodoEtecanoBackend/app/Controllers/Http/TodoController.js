@@ -1,10 +1,13 @@
-'use strict'
+"use strict";
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
-const Todo = use('App/Models/Todo');
+const Todo = use("App/Models/Todo");
+const Photo = use("App/Models/Photo");
+const Drive = use("Drive");
+const Helpers = use('Helpers')
 /**
  * Resourceful controller for interacting with todos
  */
@@ -19,20 +22,20 @@ class TodoController {
      */
     async index({ request, response }) {
         try {
-            const todos = await Todo
-                .query()
+            const todos = await Todo.query()
+                .with("photos")
                 .whereRaw("date >= date('now')")
                 .fetch();
 
             return response.json({
                 data: todos,
-                message: 'TODOs listados com sucesso!',
+                message: "TODOs listados com sucesso!",
                 error: false
             });
         } catch (error) {
             return response.json({
                 data: error,
-                message: 'Erro ao lista TODOs',
+                message: "Erro ao lista TODOs",
                 error: true
             });
         }
@@ -47,20 +50,20 @@ class TodoController {
      */
     async completed({ request, response }) {
         try {
-            const todos = await Todo
-                .query()
+            const todos = await Todo.query()
+                .with("photos")
                 .whereRaw("date < date('now')")
                 .fetch();
 
             return response.json({
                 data: todos,
-                message: 'TODOs listados com sucesso!',
+                message: "TODOs listados com sucesso!",
                 error: false
             });
         } catch (error) {
             return response.json({
                 data: error,
-                message: 'Erro ao lista TODOs',
+                message: "Erro ao lista TODOs",
                 error: true
             });
         }
@@ -75,20 +78,42 @@ class TodoController {
      * @param {Response} ctx.response
      */
     async store({ request, response }) {
-        const data = request.only(['user', 'title', 'description', 'date']);
+        const data = request.only(["user", "title", "description", "date"]);
+
+        console.log(Helpers.publicPath());
 
         try {
             const todo = await Todo.create(data);
 
+            const photos = request.input("photos");
+            if (photos && photos.length) {
+                photos.forEach(async (photo, idx) => {
+                    try {
+                        const img = Buffer.from(photo, "base64");
+                        const path = `/storage/todo/${todo.id}/photo-${idx +
+                            1}.png`;
+                        await Drive.put(path, img);
+
+                        const data = { todo_id: todo.id, url: path };
+                        await Photo.create(data);
+                    } catch (error) {
+                        response.json({
+                            data: error,
+                            message: `Erro ao fazer upload da imagem ${idx}`,
+                            error: true
+                        });
+                    }
+                });
+            }
             response.json({
                 data: todo,
-                message: 'TODO criado com sucesso',
+                message: "TODO criado com sucesso",
                 error: false
             });
         } catch (error) {
             response.json({
                 data: error,
-                message: 'Erro ao criar TODO!',
+                message: "Erro ao criar TODO!",
                 error: true
             });
         }
@@ -104,19 +129,23 @@ class TodoController {
      */
     async show({ params, request, response }) {
         try {
-            const { id } = params
-            const todo = await Todo.find(id);
+            const { id } = params;
+            const todo = await Todo.query()
+                .with("photos")
+                .where("id", id)
+                .first();
 
             return response.json({
                 data: todo,
-                message: todo ? 'TODO exibido com sucesso!' : 'TODO não existente',
+                message: todo
+                    ? "TODO exibido com sucesso!"
+                    : "TODO não existente",
                 error: todo ? false : true
             });
-
         } catch (error) {
             return response.json({
                 data: error,
-                message: 'Erro ao exibir TODO',
+                message: "Erro ao exibir TODO",
                 error: true
             });
         }
@@ -131,10 +160,10 @@ class TodoController {
      * @param {Response} ctx.response
      */
     async update({ params, request, response }) {
-        const data = request.only(['user', 'title', 'description', 'date']);
+        const data = request.only(["user", "title", "description", "date"]);
 
         try {
-            const { id } = params
+            const { id } = params;
             const todo = await Todo.find(id);
 
             if (todo) {
@@ -144,20 +173,20 @@ class TodoController {
 
                 response.json({
                     data: todo,
-                    message: 'TODO atualizado com sucesso',
+                    message: "TODO atualizado com sucesso",
                     error: false
                 });
             } else {
                 return response.json({
                     data: todo,
-                    message: 'TODO não existente',
+                    message: "TODO não existente",
                     error: true
                 });
             }
         } catch (error) {
             response.json({
                 data: error,
-                message: 'Erro ao atualizar TODO!',
+                message: "Erro ao atualizar TODO!",
                 error: true
             });
         }
@@ -173,7 +202,7 @@ class TodoController {
      */
     async destroy({ params, request, response }) {
         try {
-            const { id } = params
+            const { id } = params;
             const todo = await Todo.find(id);
 
             if (todo) {
@@ -183,24 +212,24 @@ class TodoController {
 
                 response.json({
                     data: tempTodo,
-                    message: 'TODO removido com sucesso',
+                    message: "TODO removido com sucesso",
                     error: false
                 });
             } else {
                 return response.json({
                     data: todo,
-                    message: 'TODO não existente',
+                    message: "TODO não existente",
                     error: true
                 });
             }
         } catch (error) {
             response.json({
                 data: error,
-                message: 'Erro ao remover TODO!',
+                message: "Erro ao remover TODO!",
                 error: true
             });
         }
     }
 }
 
-module.exports = TodoController
+module.exports = TodoController;

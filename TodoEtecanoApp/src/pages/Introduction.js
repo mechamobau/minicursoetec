@@ -1,22 +1,33 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 
-import { View, Text, StyleSheet, StatusBar, FlatList, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    StatusBar,
+    FlatList,
+    TouchableOpacity,
+} from 'react-native';
 import Button from '../components/Button';
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#eee'
+        backgroundColor: '#eee',
     },
     title: {
         color: '#000',
         fontSize: 30,
         fontWeight: 'bold',
-        marginBottom: 20
+        marginBottom: 20,
     },
     itemContainer: {
         flexDirection: 'row',
+    },
+    itemList: {
+        flex: 1,
+        width: '100%',
     },
     item: {
         color: '#000',
@@ -27,14 +38,14 @@ const styles = StyleSheet.create({
         borderTopColor: 'rgba(0,0,0,0.1)',
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(0,0,0,0.1)',
-        paddingVertical: 10
+        paddingVertical: 10,
     },
 });
 
 export default class Introduction extends Component {
     static navigationOptions = {
-        title: 'Aulas'
-    }
+        title: 'Aulas',
+    };
 
     constructor() {
         super();
@@ -42,49 +53,53 @@ export default class Introduction extends Component {
         this.state = {
             title: 'Mini Curso React Native',
             classes: [
-                { id: '1', name: 'Componentização' },
-                { id: '2', name: 'State' },
-                { id: '3', name: 'Props' },
-                { id: '4', name: 'Componentes nativos' },
-                { id: '5', name: 'Estilização' },
-                { id: '6', name: 'Integração com API nativa' },
-                { id: '7', name: 'Integração com API externa' },
-                { id: '8', name: 'Respondendo dúvidas' },
-            ]
-        }
+                {id: '1', name: 'Componentização'},
+                {id: '2', name: 'State'},
+                {id: '3', name: 'Props'},
+                {id: '4', name: 'Componentes nativos'},
+                {id: '5', name: 'Estilização'},
+                {id: '6', name: 'Integração com API nativa'},
+                {id: '7', name: 'Integração com API externa'},
+                {id: '8', name: 'Respondendo dúvidas'},
+            ],
+        };
     }
 
-    renderItem = ({ item }) => (
+    renderItem = ({item}) => (
         <TouchableOpacity style={styles.itemContainer}>
             <Text style={styles.item}>{item.name}</Text>
         </TouchableOpacity>
-    )
+    );
 
-    goToInit = async () => {
-        const { navigation: { navigate } } = this.props;
+    handleInit = async () => {
+        const {
+            navigation: {navigate},
+        } = this.props;
         navigate('Login');
-    }
+    };
 
     render = () => {
-        const { classes, title } = this.state;
+        const {classes, title} = this.state;
 
         return (
             <View style={styles.container}>
-                <StatusBar backgroundColor="#B12D30" animated barStyle="light-content" />
+                <StatusBar
+                    backgroundColor="#B12D30"
+                    animated
+                    barStyle="light-content"
+                />
                 <Text style={styles.title}>{title}</Text>
 
                 <FlatList
                     data={classes}
                     keyExtractor={item => item.id}
                     renderItem={this.renderItem}
-                    style={{ width: '100%' }}
-                    contentContainerStyle={{ paddingBottom: 50 }}
+                    style={styles.itemList}
+                    contentContainerStyle={{paddingBottom: 50}}
                 />
 
-                <Button onPress={this.goToInit}>
-                    Iniciar
-                </Button>
+                <Button onPress={this.handleInit}>Iniciar</Button>
             </View>
         );
-    }
+    };
 }
