@@ -102,28 +102,81 @@ export default class Create extends Component {
             response => {
                 if (!response.didCancel && !response.error) {
                     let {photos} = this.state;
-                    photos.push('data:image/jpeg;base64,' + response.data);
+                    photos.push(response);
                     this.setState({photos});
                 }
             },
         );
     };
 
+    convertFormData = (data, photos = null) => {
+        const data = new FormData();
+
+        photos.forEach(photo => {
+            data.append('photos[]', {
+                name: photo.fileName,
+                type: photo.type,
+                uri:
+                    Platform.OS === 'android'
+                        ? photo.uri
+                        : photo.uri.replace('file://', ''),
+            });
+        });
+
+        Object.keys(data).forEach(key => {
+            data.append(key, data[key]);
+        });
+    };
+
+    formatDate = data => {
+        const dateArr = data.split('/');
+
+        let dia = dateArr[0];
+        let mes = dateArr[1];
+        let ano = dateArr[2];
+
+        mes = ('0' + mes).slice(-2);
+        dia = ('0' + dia).slice(-2);
+
+        return `${ano}-${mes}-${dia}`;
+    };
+
     handleCreate = async () => {
-        const {title, description, date} = this.state;
+        const {title, description, date, photos} = this.state;
 
         if (title !== '' && date !== '') {
             const user = await AsyncStorage.getItem('username');
             this.setState({loading: true});
-            const obj = {user, title, description, date};
+
+            const formattedDate = this.formatDate(date);
+
+            const obj = this.convertFormData(
+                {
+                    user,
+                    title,
+                    description,
+                    date: formattedDate,
+                },
+                photos,
+            );
+
             try {
-                const response = await api.post('/todos', obj);
+                const response = await api.post('/todos', obj, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
 
                 const {data} = response;
 
                 if (!data.error) {
                     alert(data.message);
-                    this.setState({title: '', description: '', date: ''});
+                    this.setState({
+                        title: '',
+                        description: '',
+                        date: '',
+                        photos: [],
+                    });
                 } else {
                     alert(data.message);
                 }
@@ -190,7 +243,7 @@ export default class Create extends Component {
                             onPress={() => this.removePhoto(idx)}
                             style={styles.photoButton}>
                             <Image
-                                source={{uri: photo}}
+                                source={{uri: photo.uri}}
                                 style={styles.photoImage}
                             />
                         </TouchableOpacity>

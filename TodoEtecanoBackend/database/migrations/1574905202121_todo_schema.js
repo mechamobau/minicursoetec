@@ -10,6 +10,7 @@ class TodoSchema extends Schema {
             table.string("user", 255).notNullable();
             table.string("title", 255).notNullable();
             table.string("description", 255);
+            table.integer("vote", 11).defaultTo(0);
             table.datetime("date").notNullable();
             table.timestamps();
         });

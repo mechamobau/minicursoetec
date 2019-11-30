@@ -6,8 +6,8 @@
 
 const Todo = use("App/Models/Todo");
 const Photo = use("App/Models/Photo");
-const Drive = use("Drive");
-const Helpers = use('Helpers')
+const Helpers = use("Helpers");
+const Env = use("Env");
 /**
  * Resourceful controller for interacting with todos
  */
@@ -17,13 +17,13 @@ class TodoController {
      * GET todos
      *
      * @param {object} ctx
-     * @param {Request} ctx.request
      * @param {Response} ctx.response
      */
-    async index({ request, response }) {
+    async index({ response }) {
         try {
             const todos = await Todo.query()
                 .with("photos")
+                .where("vote", "<", "3")
                 .whereRaw("date >= date('now')")
                 .fetch();
 
@@ -42,16 +42,16 @@ class TodoController {
     }
     /**
      * Show a list of all todos completed.
-     * GET todos
+     * GET completed todos
      *
      * @param {object} ctx
-     * @param {Request} ctx.request
      * @param {Response} ctx.response
      */
-    async completed({ request, response }) {
+    async completed({ response }) {
         try {
             const todos = await Todo.query()
                 .with("photos")
+                .where("vote", "<", "3")
                 .whereRaw("date < date('now')")
                 .fetch();
 
@@ -80,31 +80,33 @@ class TodoController {
     async store({ request, response }) {
         const data = request.only(["user", "title", "description", "date"]);
 
-        console.log(Helpers.publicPath());
-
         try {
             const todo = await Todo.create(data);
 
-            const photos = request.input("photos");
-            if (photos && photos.length) {
-                photos.forEach(async (photo, idx) => {
-                    try {
-                        const img = Buffer.from(photo, "base64");
-                        const path = `/storage/todo/${todo.id}/photo-${idx +
-                            1}.png`;
-                        await Drive.put(path, img);
+            const photos = request.file("photos");
 
-                        const data = { todo_id: todo.id, url: path };
-                        await Photo.create(data);
-                    } catch (error) {
-                        response.json({
-                            data: error,
-                            message: `Erro ao fazer upload da imagem ${idx}`,
-                            error: true
-                        });
-                    }
+            if (photos) {
+                const relative = `/storage/todo/${todo.id}/`;
+                const path = Helpers.publicPath() + relative;
+                const url = Env.get("APP_URL") + relative;
+
+                await photos.moveAll(path, async file => {
+                    const data = {
+                        todo_id: todo.id,
+                        url: url + file.clientName
+                    };
+                    await Photo.create(data);
                 });
+
+                if (!photos.movedAll()) {
+                    return response.json({
+                        data: todo,
+                        message: `TODO criado com sucesso, porem erro ao fazer upload de todas as imagens`,
+                        error: false
+                    });
+                }
             }
+
             response.json({
                 data: todo,
                 message: "TODO criado com sucesso",
@@ -124,14 +126,14 @@ class TodoController {
      * GET todos/:id
      *
      * @param {object} ctx
-     * @param {Request} ctx.request
      * @param {Response} ctx.response
      */
-    async show({ params, request, response }) {
+    async show({ params, response }) {
         try {
             const { id } = params;
             const todo = await Todo.query()
                 .with("photos")
+                .where("vote", "<", "3")
                 .where("id", id)
                 .first();
 
@@ -164,12 +166,40 @@ class TodoController {
 
         try {
             const { id } = params;
-            const todo = await Todo.find(id);
+            const todo = await Todo.query()
+                .with("photos")
+                .where("vote", "<", "3")
+                .where("id", id)
+                .first();
 
             if (todo) {
                 todo.merge(data);
 
                 await todo.save();
+
+                const photos = request.file("photos");
+
+                if (photos) {
+                    const relative = `/storage/todo/${todo.id}/`;
+                    const path = Helpers.publicPath() + relative;
+                    const url = Env.get("APP_URL") + relative;
+
+                    await photos.moveAll(path, async file => {
+                        const data = {
+                            todo_id: todo.id,
+                            url: url + file.clientName
+                        };
+                        await Photo.create(data);
+                    });
+
+                    if (!photos.movedAll()) {
+                        return response.json({
+                            data: todo,
+                            message: `TODO atualizado com sucesso, porem erro ao fazer upload de todas as imagens`,
+                            error: false
+                        });
+                    }
+                }
 
                 response.json({
                     data: todo,
@@ -197,22 +227,27 @@ class TodoController {
      * DELETE todos/:id
      *
      * @param {object} ctx
-     * @param {Request} ctx.request
      * @param {Response} ctx.response
      */
-    async destroy({ params, request, response }) {
+    async destroy({ params, response }) {
         try {
             const { id } = params;
-            const todo = await Todo.find(id);
+            const todo = await Todo.query()
+                .with("photos")
+                .where("vote", "<", "3")
+                .where("id", id)
+                .first();
 
             if (todo) {
-                const tempTodo = todo;
+                todo.merge({
+                    vote: todo.vote + 1
+                });
 
-                await todo.delete();
+                await todo.save();
 
-                response.json({
-                    data: tempTodo,
-                    message: "TODO removido com sucesso",
+                return response.json({
+                    data: todo,
+                    message: "Voto para remover TODO adicionado com sucesso",
                     error: false
                 });
             } else {

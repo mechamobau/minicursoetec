@@ -61,11 +61,11 @@ export default class Login extends Component {
 
         if (username !== '') {
             await AsyncStorage.setItem('username', username);
-            this.setState({loading: true});
+            this.setState({loading: false});
             navigate('List');
         } else {
             alert('Preencha o campo de usuário');
-            this.setState({loading: true});
+            this.setState({loading: false});
         }
     };
 
@@ -85,6 +85,8 @@ export default class Login extends Component {
                     autoCapitalize="none"
                     autoCorrect={false}
                     autoCompleteType="username"
+                    returnKeyType="send"
+                    onSubmitEditing={this.handleLogin}
                 />
                 <Button onPress={this.handleLogin} loading={loading}>
                     Entrar
