@@ -8,6 +8,7 @@ import Create from './pages/Create';
 import Detail from './pages/Detail';
 import Loading from './pages/Loading';
 import Logout from './pages/Logout';
+import ImageView from './pages/ImageView';
 
 const IntroductionStack = createStackNavigator(
     {
@@ -29,6 +30,7 @@ const AppStack = createStackNavigator(
         List,
         Create,
         Detail,
+        ImageView,
     },
     {
         defaultNavigationOptions: {

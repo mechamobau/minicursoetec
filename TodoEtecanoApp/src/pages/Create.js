@@ -110,10 +110,10 @@ export default class Create extends Component {
     };
 
     convertFormData = (data, photos = null) => {
-        const data = new FormData();
+        let formData = new FormData();
 
         photos.forEach(photo => {
-            data.append('photos[]', {
+            formData.append('photos[]', {
                 name: photo.fileName,
                 type: photo.type,
                 uri:
@@ -124,8 +124,10 @@ export default class Create extends Component {
         });
 
         Object.keys(data).forEach(key => {
-            data.append(key, data[key]);
+            formData.append(key, data[key]);
         });
+
+        return formData;
     };
 
     formatDate = data => {

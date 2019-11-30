@@ -25,6 +25,7 @@ class TodoController {
                 .with("photos")
                 .where("vote", "<", "3")
                 .whereRaw("date >= date('now')")
+                .orderBy("date", "asc")
                 .fetch();
 
             return response.json({
@@ -53,6 +54,7 @@ class TodoController {
                 .with("photos")
                 .where("vote", "<", "3")
                 .whereRaw("date < date('now')")
+                .orderBy("date", "asc")
                 .fetch();
 
             return response.json({
@@ -83,12 +85,15 @@ class TodoController {
         try {
             const todo = await Todo.create(data);
 
-            const photos = request.file("photos");
+            const photos = request.file("photos", {
+                types: ["image"],
+                size: "100mb"
+            });
 
             if (photos) {
                 const relative = `/storage/todo/${todo.id}/`;
                 const path = Helpers.publicPath() + relative;
-                const url = Env.get("APP_URL") + relative;
+                const url = Env.get("PROD_URL") + relative;
 
                 await photos.moveAll(path, async file => {
                     const data = {
@@ -177,12 +182,15 @@ class TodoController {
 
                 await todo.save();
 
-                const photos = request.file("photos");
+                const photos = request.file("photos", {
+                    types: ["image"],
+                    size: "100mb"
+                });
 
                 if (photos) {
                     const relative = `/storage/todo/${todo.id}/`;
                     const path = Helpers.publicPath() + relative;
-                    const url = Env.get("APP_URL") + relative;
+                    const url = Env.get("PROD_URL") + relative;
 
                     await photos.moveAll(path, async file => {
                         const data = {

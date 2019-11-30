@@ -22,9 +22,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    loading: {
+        marginBottom: 10,
+    },
     emptyText: {
         fontWeight: 'bold',
         fontSize: 18,
+        textAlign: 'center',
     },
     todoList: {
         flex: 1,
@@ -137,16 +141,52 @@ export default class List extends Component {
         <Text style={styles.emptyText}>Ainda não há nenhum TODO criado</Text>
     );
 
+    formatDate = date => {
+        const dateArr = date.split('-');
+
+        const dia = dateArr[2];
+        const mes = dateArr[1];
+        const ano = dateArr[0];
+
+        return `${dia}/${mes}/${ano}`;
+    };
+
+    formatCreated = date => {
+        const dateTimeArr = date.split(' ');
+        const dateArr = dateTimeArr[0].split('-');
+
+        const dia = dateArr[2];
+        const mes = dateArr[1];
+        const ano = dateArr[0];
+
+        return `${dia}/${mes}/${ano}`;
+    };
+
+    handleDetail = todo => {
+        const {
+            navigation: {navigate},
+        } = this.props;
+
+        navigate('Detail', {todo});
+    };
+
     renderTodo = ({item}) => {
         return (
-            <TouchableOpacity style={styles.todoItem}>
-                <Text style={styles.todoTitle}>{item.title}</Text>
+            <TouchableOpacity
+                style={styles.todoItem}
+                onPress={() => this.handleDetail(item)}>
+                <Text style={styles.todoTitle}>
+                    {item.title} - {this.formatDate(item.date)}
+                </Text>
                 {item.description && (
                     <Text style={styles.todoDescription} numberOfLines={3}>
                         {item.description}
                     </Text>
                 )}
-                <Text style={styles.todoUser}>Criado por {item.user}</Text>
+                <Text style={styles.todoDescription}>
+                    {item.photos.length} Anexos
+                </Text>
+                <Text style={styles.todoUser}>Criado por {item.user} em {this.formatCreated(item.created_at)}</Text>
             </TouchableOpacity>
         );
     };
@@ -155,18 +195,21 @@ export default class List extends Component {
         const {todos, loading} = this.state;
         return (
             <View style={styles.container}>
-                {loading ? (
-                    <ActivityIndicator size="large" color="#B12D30" />
-                ) : (
-                    <FlatList
-                        style={styles.todoList}
-                        data={todos}
-                        extraData={todos}
-                        keyExtractor={item => String(item.id)}
-                        renderItem={this.renderTodo}
-                        ListEmptyComponent={this.renderEmpty}
+                {loading && (
+                    <ActivityIndicator
+                        style={styles.loading}
+                        size="large"
+                        color="#B12D30"
                     />
                 )}
+                <FlatList
+                    style={styles.todoList}
+                    data={todos}
+                    extraData={todos}
+                    keyExtractor={item => String(item.id)}
+                    renderItem={this.renderTodo}
+                    ListEmptyComponent={this.renderEmpty}
+                />
             </View>
         );
     };
